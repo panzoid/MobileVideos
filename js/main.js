@@ -150,9 +150,6 @@ $(document).on("pagebeforeshow", "#video", function() {
 
 $(document).on("pageshow", "#video", function() {
     loadCrossDomain(domain + sessionStorage.video_href, "#mediaEmbedCodeInput", function(data) {
-        //data = JSON.stringify(data);
-        //data = data.match(/("<iframe.+?<\/iframe>")/i)[1];
-        //data = JSON.parse(data);
         data = data.query.results.results.input.value;
         //TODO: resize iframe
         $("#video").append(data);
@@ -184,9 +181,6 @@ function loadCrossDomain(url, cssselector, callback) {
 
 function getCategories(callback) {
     loadCrossDomain(domain, "#categories li", function(data) {
-        //data = JSON.stringify(data);
-        //data = data.match(/"id"\:"categories","ul"\:\{"li"\:(\[.+?\])/i)[1];
-        //data = JSON.parse(data);
         data = data.query.results.results.li;
         callback(data);
     });
@@ -211,9 +205,6 @@ function getThumbnails(href, callback) {
     loadCrossDomain(domain + href, ".mozaique > div", function(data) {
         try {
             data = data.query.results.results.div;
-            //data = JSON.stringify(data);
-            //data = data.match(/{"id":"content","div":{"class":"mozaique","div":(\[.+?\])}},{"class":"pagination/i)[1];
-            //data = JSON.parse(data);
             callback(data);
         }
         catch (e) {
@@ -227,9 +218,6 @@ function getSearchThumbnails(href, callback) {
     loadCrossDomain(domain + href, ".mozaique.profilesGalleries.videoThumbs > div", function(data) {
         try {
             data = data.query.results.results.div;
-            //data = JSON.stringify(data);
-            //data = data.match(/{"id":"content","div":{"class":"mozaique profilesGalleries videoThumbs","id":"profilesList","div":(\[.+?\])}},{"class":"pagination/i)[1];
-            //data = JSON.parse(data);
             callback(data);
         }
         catch (e) {
