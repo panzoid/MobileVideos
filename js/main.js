@@ -1,4 +1,4 @@
-var domain = "REMOVED";
+var domain = "";
 
 $(document).on('pagecreate', '#menu', function() {
     window.scrollTo(0, 1);
@@ -135,7 +135,7 @@ $(document).on("pageshow", "#thumbnails", function() {
                     addThumbnail(thumbnails[i]);
                 }
                 catch (e) {
-                    console.log("Caught error: " + e.message);
+                    console.log("Caught error: " + e.message + ", thumbnail = " + thumbnails[i]);
                 }
             }
             $('#thumbnails_list').listview('refresh');
@@ -149,37 +149,56 @@ $(document).on("pagebeforeshow", "#video", function() {
 });
 
 $(document).on("pageshow", "#video", function() {
-    loadCrossDomain(domain + sessionStorage.video_href, function(data) {
-        data = data.query.results.body.div.div[3].div[1].div.div[3].input.value;
+    loadCrossDomain(domain + sessionStorage.video_href, "#mediaEmbedCodeInput", function(data) {
+        //data = JSON.stringify(data);
+        //data = data.match(/("<iframe.+?<\/iframe>")/i)[1];
+        //data = JSON.parse(data);
+        data = data.query.results.results.input.value;
+        //TODO: resize iframe
         $("#video").append(data);
         $('#video').trigger('create');
     });
 });
 
-function loadCrossDomain(url, callback) {
+function loadCrossDomainDeprecated(url, callback) {
     $.mobile.loading('show');
-    var yql = 'http://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from html where url="' + url + '"') + '&format=json';
-    console.log(yql);
+    var yql = 'https://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from html where url="' + url + '"') + '&format=json';
+    console.log("loadCrossDomain url = " + yql);
     $.getJSON(yql, function(data) {
         $.mobile.loading('hide');
-        console.log(data);
+        console.log("loadCrossDomain data = ", data);
+        callback(data);
+    });
+}
+
+function loadCrossDomain(url, cssselector, callback) {
+    $.mobile.loading('show');
+    var yql = 'https://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from data.html.cssselect where url="' + url + '" and css="' + cssselector + '"') + '&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys';
+    console.log("loadCrossDomain url = " + yql);
+    $.getJSON(yql, function(data) {
+        $.mobile.loading('hide');
+        console.log("loadCrossDomain data = ", data);
         callback(data);
     });
 }
 
 function getCategories(callback) {
-    loadCrossDomain(domain, function(data) {
-        var categories = data.query.results.body.div.div[4].ul.li;
-        callback(categories);
+    loadCrossDomain(domain, "#categories li", function(data) {
+        //data = JSON.stringify(data);
+        //data = data.match(/"id"\:"categories","ul"\:\{"li"\:(\[.+?\])/i)[1];
+        //data = JSON.parse(data);
+        data = data.query.results.results.li;
+        callback(data);
     });
 }
 
-function addThumbnail(thumbnail) {
-    var video_href = thumbnail.div.div.a.href;
-    var src = thumbnail.div.div.a.img.src;
-    var title = thumbnail.div.p[0].a.content;
-    var duration = thumbnail.div.p[1].span.span.content;
-    var id = thumbnail.id;
+function addThumbnail(data) {
+    data = JSON.stringify(data);
+    var video_href = data.match(/"href":"(.+?)"/i)[1];
+    var src = data.match(/"src":"(.+?)"/i)[1];
+    var title = data.match(/"title":"(.+?)"/i)[1];
+    var duration = data.match(/"class":"duration","content":"(.+?)"/i)[1];
+    var id = data.match(/"id":"(.+?)"/i)[1];
     $('#thumbnails_list').append('<li><a href="#" id="' + id + '"><img src="' + src + '"><h2>' + title + '</h2><p>' + duration + '</p></a></li>');
     $("#" + id).on("click", function(event) {
         event.preventDefault();
@@ -189,26 +208,32 @@ function addThumbnail(thumbnail) {
 }
 
 function getThumbnails(href, callback) {
-    loadCrossDomain(domain + href, function(data) {
+    loadCrossDomain(domain + href, ".mozaique > div", function(data) {
         try {
-            var thumbnails = data.query.results.body.div.div[3].div[2].div.div;
-            callback(thumbnails);
+            data = data.query.results.results.div;
+            //data = JSON.stringify(data);
+            //data = data.match(/{"id":"content","div":{"class":"mozaique","div":(\[.+?\])}},{"class":"pagination/i)[1];
+            //data = JSON.parse(data);
+            callback(data);
         }
         catch (e) {
-            console.log("Caught error: " + e.message);
+            console.log("Caught error = ", e, ", data = ", data);
             alert("No results found.");
         }
     });
 }
 
 function getSearchThumbnails(href, callback) {
-    loadCrossDomain(domain + href, function(data) {
+    loadCrossDomain(domain + href, ".mozaique.profilesGalleries.videoThumbs > div", function(data) {
         try {
-            var thumbnails = data.query.results.body.div.div[3].div[3].div.div;
-            callback(thumbnails);
+            data = data.query.results.results.div;
+            //data = JSON.stringify(data);
+            //data = data.match(/{"id":"content","div":{"class":"mozaique profilesGalleries videoThumbs","id":"profilesList","div":(\[.+?\])}},{"class":"pagination/i)[1];
+            //data = JSON.parse(data);
+            callback(data);
         }
         catch (e) {
-            console.log("Caught error: " + e.message);
+            console.log("Caught error = ", e, ", data = ", data);
             alert("No results found.");
         }
     });
